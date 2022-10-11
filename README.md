@@ -1,4 +1,19 @@
 # Our E School 
+
+## This Project has been Archived as I'm no longer working on it
+
+NOTE TO NEW CLONERS: (READ THIS BEFORE USING OR CREATING AN ISSUE)
+        || This Project is not migrated to null-safety yet
+        || This project was built with Flutter versions less than 2.0 (flutter V 1.X)
+        || Before compiling this project you have to make sure you update server.dart file to include the firebase functions URL's (this is a must procedure)
+        || initialize your firebase firestore project as instructed in database folder on this project.
+        
+        
+
+## This Project is not migrated to null-safety yet
+#### So if you're trying to run it then you might need to downgrade your flutter version.
+#### You can use [fvm](https://github.com/leoafarias/fvm) if you do not want to downgrade your flutter version.
+
  [![HitCount](http://hits.dwyl.com/ketanchoyal/Our-E-School.svg)](http://hits.dwyl.com/ketanchoyal/Our-E-School)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/ketanchoyal/Our-E-School/pull/new/master)
 [![GitHub stars](https://img.shields.io/github/stars/ketanchoyal/Our-E-School.svg?style=social&label=Stars✯)](https://github.com/ketanchoyal/Our-E-School/stargazers/)

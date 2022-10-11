@@ -1,14 +1,15 @@
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:ourESchool/imports.dart';
 
 class ProfileServices extends Services {
   StorageServices storageServices = locator<StorageServices>();
-  StreamController<User> loggedInUserStream =
+  StreamController<AppUser> loggedInUserStream =
       StreamController.broadcast(sync: true);
 
   String country = Services.country;
 
-  List<User> childrens = [];
+  List<AppUser> childrens = [];
 
   ProfileServices() {
     getSchoolCode();
@@ -16,7 +17,7 @@ class ProfileServices extends Services {
   }
 
   setProfileData({
-    User user,
+    AppUser user,
     UserType userType,
   }) async {
     UserType userType = await sharedPreferencesHelper.getUserType();
@@ -42,25 +43,34 @@ class ProfileServices extends Services {
       "country": country
     });
 
-    final response = await http.post(
-      profileUpdateUrl,
-      body: body,
+    Dio dio = Dio();
+    Options options = Options(
+      contentType: 'multipart/form-data',
       headers: headers,
     );
+
+    final response = await dio.post(
+      profileUpdateUrl,
+      options: options,
+      data: body,
+      // body: body,
+      // headers: headers,
+    );
+
     if (response.statusCode == 200) {
       // getProfileData(user.id, userType);
       print("Data Uploaded Succesfully");
-      final jsonData = await json.decode(response.body);
+      final jsonData = await json.decode(response.data.toString());
 
-      User user = User.fromJson(jsonData);
-      sharedPreferencesHelper.setUserDataModel(response.body);
+      AppUser user = AppUser.fromJson(jsonData);
+      sharedPreferencesHelper.setUserDataModel(response.data.toString());
       loggedInUserStream.add(user);
     } else {
       print("Data Upload error");
     }
   }
 
-  Future<User> getLoggedInUserProfileData() async {
+  Future<AppUser> getLoggedInUserProfileData() async {
     // if (schoolCode == null)
     await getSchoolCode();
     String id = await sharedPreferencesHelper.getLoggedInUserId();
@@ -72,7 +82,7 @@ class ProfileServices extends Services {
       print("Data Retrived Succesfully (Local)");
       final jsonData = await json.decode(userDataModel);
 
-      User user = User.fromJson(jsonData);
+      AppUser user = AppUser.fromJson(jsonData);
       loggedInUserStream.add(user);
       user.toString();
       return user;
@@ -87,42 +97,50 @@ class ProfileServices extends Services {
 
     print(body);
 
-    final response = await http.post(
-      getProfileDataUrl,
-      body: body,
+    Dio dio = Dio();
+    Options options = Options(
+      contentType: 'multipart/form-data',
       headers: headers,
+    );
+
+    final response = await dio.post(
+      getProfileDataUrl,
+      options: options,
+      data: body,
+      // body: body,
+      // headers: headers,
     );
     if (response.statusCode == 200) {
       print("Data Retrived Succesfully");
-      final jsonData = await json.decode(response.body);
+      final jsonData = await json.decode(response.data.toString());
 
-      User user = User.fromJson(jsonData);
-      sharedPreferencesHelper.setUserDataModel(response.body);
+      AppUser user = AppUser.fromJson(jsonData);
+      sharedPreferencesHelper.setUserDataModel(response.data.toString());
       loggedInUserStream.add(user);
       user.toString();
       return user;
     } else {
       print("Data Retrived failed");
-      return User(id: id);
+      return AppUser(id: id);
     }
   }
 
   //Fetch Profile Data Using Firestore SDK
-  Future<User> getProfileDataById(String uid, UserType userType) async {
+  Future<AppUser> getProfileDataById(String uid, UserType userType) async {
     DocumentReference profielRef = await _getProfileRef(uid, userType);
 
     try {
-      User user = User.fromSnapshot(
-          await profielRef.get(source: Source.serverAndCache));
+      AppUser user = AppUser.fromSnapshot(
+          await profielRef.get(GetOptions(source: Source.serverAndCache)));
       return user;
     } catch (e) {
       print(e);
-      return User(id: uid);
+      return AppUser(id: uid);
     }
   }
 
-  Future<User> getUserDataFromReference(DocumentReference reference) async {
-    User user = User.fromSnapshot(await reference.get());
+  Future<AppUser> getUserDataFromReference(DocumentReference reference) async {
+    AppUser user = AppUser.fromSnapshot(await reference.get());
     return user;
   }
 
@@ -144,7 +162,7 @@ class ProfileServices extends Services {
   }
 
   _getChildrensData(Map<String, String> childIds) async {
-    List<User> childData = [];
+    List<AppUser> childData = [];
     for (String id in childIds.values) {
       childData.add(await getProfileDataById(id, UserType.STUDENT));
     }
@@ -154,14 +172,14 @@ class ProfileServices extends Services {
   Future<DocumentReference> _getProfileRef(
       String uid, UserType userType) async {
     await getSchoolCode();
-    DocumentReference ref = (await schoolRefwithCode()).document('Profile');
+    DocumentReference ref = (await schoolRefwithCode()).doc('Profile');
     switch (userType) {
       case UserType.STUDENT:
-        return ref.collection('Student').document(uid);
+        return ref.collection('Student').doc(uid);
         break;
       case UserType.TEACHER:
       case UserType.PARENT:
-        return ref.collection('Parent-Teacher').document(uid);
+        return ref.collection('Parent-Teacher').doc(uid);
         break;
       case UserType.UNKNOWN:
         return null;
@@ -172,7 +190,7 @@ class ProfileServices extends Services {
   }
 
   //Fetch Profile Data Using HTTP Request
-  Future<User> getProfileDataByIdd(String uid, UserType userType) async {
+  Future<AppUser> getProfileDataByIdd(String uid, UserType userType) async {
     await getSchoolCode();
     var body = json.encode({
       "schoolCode": schoolCode.trim().toUpperCase(),
@@ -183,21 +201,35 @@ class ProfileServices extends Services {
 
     print(body);
 
-    final response = await http.post(
-      getProfileDataUrl,
-      body: body,
+    Dio dio = Dio();
+    Options options = Options(
+      contentType: 'multipart/form-data',
       headers: headers,
     );
+
+    final response = await dio.post(
+      profileUpdateUrl,
+      options: options,
+      data: body,
+      // body: body,
+      // headers: headers,
+    );
+
+    // final response = await http.post(
+    //   getProfileDataUrl,
+    //   body: body,
+    //   headers: headers,
+    // );
     if (response.statusCode == 200) {
       print("Data Retrived Succesfully");
-      final jsonData = await json.decode(response.body);
+      final jsonData = await json.decode(response.data.toString());
 
-      User user = User.fromJson(jsonData);
+      AppUser user = AppUser.fromJson(jsonData);
       user.toString();
       return user;
     } else {
       print("Data Retrived failed");
-      return User(id: uid);
+      return AppUser(id: uid);
     }
   }
 }
